@@ -2,14 +2,100 @@ syntax = "proto3";
 
 package account;
 
-message Request {
-  string ping = 1;
+message Account{
+  string uuid=1;
+  string name=2;
+  string email=3;
+  string phone_number=4;
+  string proto_url=5;
+  bool  confirmedAndActive=6;
+  bool support=7;
+  int64 memberSince=8;
 }
 
-message Response {
-  string pong = 1;
+message AccountList{
+  repeated Account accounts=1;
+  int32 limit=2;
+  int32 offset=3;
 }
 
-service Account {
-  rpc Ping(Request) returns(Response);
+message GetAccountListRequest{
+  int32 limit=1;
+  int32 offset=2;
+}
+
+message AccountEmpty{}
+
+message GetAccountRequest{
+  string uuid=1;
+}
+
+message CreateAccountRequest{
+  string name=1;
+  string email=2;
+  string phone_number=3;
+}
+
+message UpdatePasswordRequest{
+  string uuid=1;
+  string password=2;
+}
+
+message PasswordResetRequest{
+  string email=1;
+}
+
+message EmailChangeRequest{
+  string uuid=1;
+  string email=2;
+}
+
+message VerifyPasswordRequest{
+  string email=1;
+  string passowrd=2;
+}
+
+message EmailComfirmation{
+  string uuid=1;
+  string email=2;
+}
+
+message GetOrCreateRequest{
+  string name=1;
+  string email=2;
+  string phone_number=3;
+}
+
+message TrackEventReqeust{
+  string uuid=1;
+  string event=2;
+}
+
+message SyncUserRequest{
+  string uuid=1;
+}
+
+message GetAccountByPhoneNumberRequest{
+  string phone_number=1;
+}
+
+message GetAccountByEmailRequest{
+  string email=1;
+}
+
+service AccountService {
+  rpc List(GetAccountListRequest) returns(AccountList);
+  rpc Get (GetAccountRequest) returns (Account);
+  rpc Create (CreateAccountRequest) returns (Account);
+  rpc Update (Account) returns (Account);
+  rpc UpdatePassword (UpdatePasswordRequest) returns (AccountEmpty);
+  rpc RequestPasswordReset (PasswordResetRequest) returns (AccountEmpty);
+  rpc RequestEmailChange(EmailChangeRequest) returns(AccountEmpty);
+  rpc VerifyPassword(VerifyPasswordRequest) returns(Account);
+  rpc ChangeEmail(EmailComfirmation) returns(AccountEmpty);
+  rpc GetOrCreate (GetOrCreateRequest) returns (Account);
+  rpc GetAccountByPhoneNumber(GetAccountByPhoneNumberRequest) returns(Account);
+  rpc GetAccountByEmail(GetAccountByEmailRequest) returns(Account);
+  rpc TrackEvent (TrackEventReqeust) returns (AccountEmpty);
+  rpc SyncUser (SyncUserRequest) returns (AccountEmpty);
 }
