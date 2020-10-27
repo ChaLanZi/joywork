@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package account;
+
+message Request {
+  string ping = 1;
+}
+
+message Response {
+  string pong = 1;
+}
+
+service Account {
+  rpc Ping(Request) returns(Response);
+}
