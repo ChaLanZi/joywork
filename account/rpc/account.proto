@@ -3,84 +3,84 @@ syntax = "proto3";
 package account;
 
 message Account{
-  string uuid=1;
-  string name=2;
-  string email=3;
-  string phone_number=4;
-  string proto_url=5;
-  bool  confirmedAndActive=6;
-  bool support=7;
-  int64 memberSince=8;
+  string uuid = 1;
+  string name = 2;
+  string email = 3;
+  string phone_number = 4;
+  string proto_url = 5;
+  bool  confirmedAndActive = 6;
+  bool support = 7;
+  int64 memberSince = 8;
 }
 
 message AccountList{
-  repeated Account accounts=1;
-  int32 limit=2;
-  int32 offset=3;
+  repeated Account accounts = 1;
+  int32 limit = 2;
+  int32 offset = 3;
 }
 
 message GetAccountListRequest{
-  int32 limit=1;
-  int32 offset=2;
+  int32 limit = 1;
+  int32 offset = 2;
 }
 
 message AccountEmpty{}
 
 message GetAccountRequest{
-  string uuid=1;
+  string uuid = 1;
 }
 
 message CreateAccountRequest{
-  string name=1;
-  string email=2;
-  string phone_number=3;
+  string name = 1;
+  string email = 2;
+  string phone_number = 3;
 }
 
 message UpdatePasswordRequest{
-  string uuid=1;
-  string password=2;
+  string uuid = 1;
+  string password = 2;
 }
 
 message PasswordResetRequest{
-  string email=1;
+  string email = 1;
 }
 
 message EmailChangeRequest{
-  string uuid=1;
-  string email=2;
+  string uuid = 1;
+  string email = 2;
 }
 
 message VerifyPasswordRequest{
-  string email=1;
-  string passowrd=2;
+  string email = 1;
+  string password = 2;
 }
 
-message EmailComfirmation{
-  string uuid=1;
-  string email=2;
+message EmailConfirmation{
+  string uuid = 1;
+  string email = 2;
 }
 
 message GetOrCreateRequest{
-  string name=1;
-  string email=2;
-  string phone_number=3;
+  string name = 1;
+  string email = 2;
+  string phone_number = 3;
 }
 
-message TrackEventReqeust{
-  string uuid=1;
-  string event=2;
+message TrackEventRequest{
+  string uuid = 1;
+  string event = 2;
 }
 
 message SyncUserRequest{
-  string uuid=1;
+  string uuid = 1;
 }
 
 message GetAccountByPhoneNumberRequest{
-  string phone_number=1;
+  string phone_number = 1;
 }
 
 message GetAccountByEmailRequest{
-  string email=1;
+  string email = 1;
 }
 
 service AccountService {
@@ -92,10 +92,10 @@ service AccountService {
   rpc RequestPasswordReset (PasswordResetRequest) returns (AccountEmpty);
   rpc RequestEmailChange(EmailChangeRequest) returns(AccountEmpty);
   rpc VerifyPassword(VerifyPasswordRequest) returns(Account);
-  rpc ChangeEmail(EmailComfirmation) returns(AccountEmpty);
-  rpc GetOrCreate (GetOrCreateRequest) returns (Account);
+  rpc ChangeEmail(EmailChangeRequest) returns(AccountEmpty);
+  rpc GetOrCreate(GetOrCreateRequest) returns (Account);
   rpc GetAccountByPhoneNumber(GetAccountByPhoneNumberRequest) returns(Account);
   rpc GetAccountByEmail(GetAccountByEmailRequest) returns(Account);
-  rpc TrackEvent (TrackEventReqeust) returns (AccountEmpty);
+  rpc TrackEvent (TrackEventRequest) returns (AccountEmpty);
   rpc SyncUser (SyncUserRequest) returns (AccountEmpty);
 }
