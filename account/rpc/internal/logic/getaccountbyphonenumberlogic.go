@@ -1,7 +1,13 @@
 package logic
 
 import (
+	"account/rpc/helper"
+	"account/rpc/model"
 	"context"
+
+	"google.golang.org/grpc/codes"
+
+	"google.golang.org/grpc/status"
 
 	"account/rpc/internal/svc"
 	account "account/rpc/pb"
@@ -24,7 +30,29 @@ func NewGetAccountByPhoneNumberLogic(ctx context.Context, svcCtx *svc.ServiceCon
 }
 
 func (l *GetAccountByPhoneNumberLogic) GetAccountByPhoneNumber(in *account.GetAccountByPhoneNumberRequest) (*account.Account, error) {
-	// todo: add your logic here and delete this line
+	var err error
+	if in.PhoneNumber, err = helper.ParseAndFormatPhoneNumber(in.PhoneNumber); err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid phone number")
+	}
+	if in.PhoneNumber == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "No Phone number provided")
+	}
+	var a *model.Account
+	a, err = l.svcCtx.Model.FindAccountByPhoneNumber(in.PhoneNumber)
+	if err == model.ErrNotFound {
+		return nil, status.Errorf(codes.NotFound, "")
+	}
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "failed to query database for existing phone number")
+	}
 
-	return &account.Account{}, nil
+	return &account.Account{
+		Uuid:               a.Id,
+		Name:               a.Name,
+		Email:              a.Email,
+		PhoneNumber:        a.PhoneNumber,
+		ProtoUrl:           a.PhotoUrl,
+		ConfirmedAndActive: helper.Int64ToBool(a.ConfirmedAndActive),
+		Support:            helper.Int64ToBool(a.Support),
+	}, nil
 }

@@ -24,7 +24,6 @@ func NewSyncUserLogic(ctx context.Context, svcCtx *svc.ServiceContext) *SyncUser
 }
 
 func (l *SyncUserLogic) SyncUser(in *account.SyncUserRequest) (*account.AccountEmpty, error) {
-	// todo: add your logic here and delete this line
 
 	return &account.AccountEmpty{}, nil
 }

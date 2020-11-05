@@ -1,7 +1,13 @@
 package logic
 
 import (
+	"account/rpc/helper"
+	"account/rpc/model"
 	"context"
+
+	"google.golang.org/grpc/codes"
+
+	"google.golang.org/grpc/status"
 
 	"account/rpc/internal/svc"
 	account "account/rpc/pb"
@@ -24,7 +30,23 @@ func NewGetLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetLogic {
 }
 
 func (l *GetLogic) Get(in *account.GetAccountRequest) (*account.Account, error) {
-	// todo: add your logic here and delete this line
-
-	return &account.Account{}, nil
+	if in.Uuid == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid uuid")
+	}
+	a, err := l.svcCtx.Model.FindOne(in.Uuid)
+	if err == model.ErrNotFound {
+		return nil, status.Errorf(codes.NotFound, "A user not exist")
+	}
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "failed to find database: ", err)
+	}
+	return &account.Account{
+		Uuid:               a.Id,
+		Name:               a.Name,
+		Email:              a.Email,
+		PhoneNumber:        a.PhoneNumber,
+		ProtoUrl:           a.PhotoUrl,
+		ConfirmedAndActive: helper.Int64ToBool(a.ConfirmedAndActive),
+		Support:            helper.Int64ToBool(a.Support),
+	}, nil
 }
