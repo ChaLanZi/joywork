@@ -11,4 +11,6 @@ type Config struct {
 	Table             string
 	Cache             cache.CacheConf
 	MinPasswordLength int
+	SigningSecret     string
+	ExternalApex      string
 }

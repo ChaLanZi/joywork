@@ -2,7 +2,8 @@ package logic
 
 import (
 	"account/crypto"
-	"account/rpc/helper"
+	"account/rpc/internal/auth"
+	"account/rpc/internal/helper"
 	"account/rpc/model"
 	"context"
 	"strings"
@@ -32,6 +33,16 @@ func NewVerifyPasswordLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ve
 }
 
 func (l *VerifyPasswordLogic) VerifyPassword(in *account.VerifyPasswordRequest) (*account.Account, error) {
+	_, authz, err := helper.GetAuth(l.ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "failed to authorize.")
+	}
+	switch authz {
+	case auth.AuthorizationWWWService:
+	case auth.AuthorizationSupportUser:
+	default:
+		return nil, status.Errorf(codes.PermissionDenied, "You do not have access to this service.")
+	}
 	in.Email = strings.TrimSpace(strings.ToLower(in.Email))
 	in.Password = strings.TrimSpace(in.Password)
 	if len(in.Email) <= 0 {

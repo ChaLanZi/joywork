@@ -2,7 +2,7 @@ package logic
 
 import (
 	"account/crypto"
-	"account/rpc/helper"
+	"account/rpc/internal/helper"
 	"account/rpc/model"
 	"context"
 	"strings"

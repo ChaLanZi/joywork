@@ -1,7 +1,8 @@
 package logic
 
 import (
-	"account/rpc/helper"
+	"account/rpc/internal/auth"
+	"account/rpc/internal/helper"
 	"account/rpc/model"
 	"context"
 
@@ -30,6 +31,29 @@ func NewGetLogic(ctx context.Context, svcCtx *svc.ServiceContext) *GetLogic {
 }
 
 func (l *GetLogic) Get(in *account.GetAccountRequest) (*account.Account, error) {
+	md, authz, err := helper.GetAuth(l.ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "Failed to authorize.")
+	}
+	switch authz {
+	case auth.AuthorizationWWWService:
+	case auth.AuthorizationAccountService:
+	case auth.AuthorizationCompanyService:
+	case auth.AuthorizationWhoamiService:
+	case auth.AuthorizationBotService:
+	case auth.AuthorizationAuthenticatedUser:
+		uuid, err := auth.GetCurrentUserUUIDFromMetadata(md)
+		if err != nil {
+			return nil, status.Errorf(codes.Unknown, "Failed to find current user uuid %v", md)
+		}
+		if uuid != in.Uuid {
+			return nil, status.Errorf(codes.PermissionDenied, "You do not have access to this service.")
+		}
+	case auth.AuthorizationSupportUser:
+	case auth.AuthorizationSuperpowersService:
+	default:
+		return nil, status.Errorf(codes.PermissionDenied, "You do not have access to this service.")
+	}
 	if in.Uuid == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid uuid")
 	}

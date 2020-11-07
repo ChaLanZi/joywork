@@ -1,7 +1,7 @@
 package logic
 
 import (
-	"account/rpc/helper"
+	"account/rpc/internal/helper"
 	"account/rpc/model"
 	"context"
 	"strings"

@@ -1,7 +1,8 @@
 package logic
 
 import (
-	"account/rpc/helper"
+	"account/rpc/internal/auth"
+	"account/rpc/internal/helper"
 	"account/rpc/model"
 	"context"
 
@@ -30,7 +31,15 @@ func NewListLogic(ctx context.Context, svcCtx *svc.ServiceContext) *ListLogic {
 }
 
 func (l *ListLogic) List(in *account.GetAccountListRequest) (*account.AccountList, error) {
-	var err error
+	_, authz, err := helper.GetAuth(l.ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "Failed to authorize.")
+	}
+	switch authz {
+	case auth.AuthorizationSupportUser:
+	default:
+		return nil, status.Errorf(codes.PermissionDenied, "You do not have access to this service.")
+	}
 	if in.Offset < 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid offset - must be greater than or equal to zero")
 	}

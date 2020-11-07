@@ -2,7 +2,8 @@ package logic
 
 import (
 	"account/crypto"
-	"account/rpc/helper"
+	"account/rpc/internal/auth"
+	"account/rpc/internal/helper"
 	"account/rpc/model"
 	"context"
 	"strings"
@@ -32,7 +33,17 @@ func NewCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *CreateLogi
 }
 
 func (l *CreateLogic) Create(in *account.CreateAccountRequest) (*account.Account, error) {
-	var err error
+	_, authz, err := helper.GetAuth(l.ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "Failed to authorize.")
+	}
+	switch authz {
+	case auth.AuthorizationSupportUser:
+	case auth.AuthorizationWWWService:
+	case auth.AuthorizationCompanyService:
+	default:
+		return nil, status.Errorf(codes.PermissionDenied, "You do not have access to this service.")
+	}
 	if (len(in.Email) + len(in.PhoneNumber) + len(in.Name)) == 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "Empty request")
 	}

@@ -2,6 +2,8 @@ package logic
 
 import (
 	"account/crypto"
+	"account/rpc/internal/auth"
+	"account/rpc/internal/helper"
 	"context"
 
 	"google.golang.org/grpc/codes"
@@ -29,6 +31,24 @@ func NewUpdatePasswordLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Up
 }
 
 func (l *UpdatePasswordLogic) UpdatePassword(in *account.UpdatePasswordRequest) (*account.AccountEmpty, error) {
+	md, authz, err := helper.GetAuth(l.ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "failed to authorize")
+	}
+	switch authz {
+	case auth.AuthorizationAuthenticatedUser:
+		uuid, err := auth.GetCurrentUserUUIDFromMetadata(md)
+		if err != nil {
+			return nil, status.Errorf(codes.Unknown, "failed to find current user uuid.")
+		}
+		if uuid != in.Uuid {
+			return nil, status.Errorf(codes.PermissionDenied, "You do not have access to this service.")
+		}
+	case auth.AuthorizationWWWService:
+	case auth.AuthorizationSupportUser:
+	default:
+		return nil, status.Errorf(codes.PermissionDenied, "You do not have access to this service.")
+	}
 	if in.Uuid == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid uuid")
 	}

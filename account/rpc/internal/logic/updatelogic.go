@@ -1,7 +1,8 @@
 package logic
 
 import (
-	"account/rpc/helper"
+	"account/rpc/internal/auth"
+	"account/rpc/internal/helper"
 	"account/rpc/model"
 	"context"
 	"strings"
@@ -31,6 +32,26 @@ func NewUpdateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *UpdateLogi
 }
 
 func (l *UpdateLogic) Update(in *account.Account) (*account.Account, error) {
+	md, authz, err := helper.GetAuth(l.ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Unknown, "Failed to authorize")
+	}
+	switch authz {
+	case auth.AuthorizationWWWService:
+	case auth.AuthorizationCompanyService:
+	case auth.AuthorizationAuthenticatedUser:
+		uuid, err := auth.GetCurrentUserUUIDFromMetadata(md)
+		if err != nil {
+			return nil, status.Errorf(codes.Unknown, "failed to find current user uuid")
+		}
+		if uuid != in.Uuid {
+			return nil, status.Errorf(codes.PermissionDenied, "You do not have access to this service.")
+		}
+	case auth.AuthorizationSupportUser:
+	case auth.AuthorizationSuperpowersService:
+	default:
+		return nil, status.Errorf(codes.PermissionDenied, "You do not have access to this service.")
+	}
 	if in.Uuid == "" {
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid uuid")
 	}
@@ -65,6 +86,26 @@ func (l *UpdateLogic) Update(in *account.Account) (*account.Account, error) {
 
 		if err != model.ErrNotFound {
 			return nil, status.Errorf(codes.Unknown, "failed to find database by phone number: ", err)
+		}
+	}
+	if authz == auth.AuthorizationAuthenticatedUser {
+		if in.ConfirmedAndActive != helper.Int64ToBool(a.ConfirmedAndActive) && a.ConfirmedAndActive == 0 {
+			return nil, status.Errorf(codes.PermissionDenied, "You cannot activate this account.")
+		}
+		if in.Support != helper.Int64ToBool(a.Support) {
+			return nil, status.Errorf(codes.PermissionDenied, "You cannot change the support parameter.")
+		}
+		if in.ProtoUrl != in.ProtoUrl {
+			return nil, status.Errorf(codes.PermissionDenied, "You cannot change the photo through this endpoint.")
+		}
+		if in.Email != a.Email {
+			emailChange := NewRequestEmailChangeLogic(l.ctx, l.svcCtx)
+			_, err = emailChange.RequestEmailChange(&account.EmailChangeRequest{Uuid: in.Uuid, Email: in.Email})
+			if err != nil {
+				return nil, status.Errorf(codes.Unknown, "failed to request email change.")
+			}
+			// revert
+			in.Email = a.Email
 		}
 	}
 	res, err := l.svcCtx.Model.Update(model.Account{

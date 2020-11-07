@@ -1,6 +1,8 @@
 Name: account.rpc
 ListenOn: 127.0.0.1:30010
 MinPasswordLenth: 6
+SigningSecret:
+ExternalApex:
 Etcd:
   Hosts:
     - 127.0.0.1:2379
